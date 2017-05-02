@@ -89,6 +89,20 @@ func SumCalls(callerCounter map[string][]PayDur) map[string]PayDur {
 	return totalCalls
 }
 
+// TopCaller finds the top caller and its amount to pay
+func TopCaller(totalCalls map[string]PayDur) (string, int) {
+	var topCaller string
+	topPay := 0
+	maxDur := 0.0
+	for k := range totalCalls {
+		if totalCalls[k].TotalDuration > maxDur {
+			topCaller = k
+			topPay = totalCalls[k].TotalPay
+		}
+	}
+	return topCaller, topPay
+}
+
 // PayFormat takes a map with total daily data per caller and returns the total amout to pay
 func PayFormat(price int64) string {
 	return ""
@@ -98,7 +112,8 @@ func main() {
 	// Create maps to facilitate calcs
 	callerCounter := FileParser(os.Args[1])
 	totalCalls := SumCalls(callerCounter)
+	topCaller, topPay := TopCaller(totalCalls)
 
-	fmt.Println(callerCounter, totalCalls)
+	fmt.Println(topCaller, topPay)
 
 }
