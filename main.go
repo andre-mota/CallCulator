@@ -5,7 +5,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"os"
 	"time"
@@ -14,15 +13,18 @@ import (
 // PayDur is a struct to use when handling call duration and its price
 type PayDur struct {
 	TotalDuration float64
-	TotalPay      int
+	TotalPay      Money
 }
 
 func handleErr(err error) {
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 		panic(err)
 	}
 }
+
+// Money is a type to handle money format
+type Money int
 
 // FileParser takes the data file and parses its data to a map
 func FileParser(filepath string) map[string][]PayDur {
@@ -49,17 +51,17 @@ func FileParser(filepath string) map[string][]PayDur {
 		handleErr(err)
 
 		dur := tsEnd.Sub(tsStart)
-		price := 0
+		var price Money
 
 		if dur.Seconds() >= 300 {
-			price = 25 + int(math.Trunc((dur.Seconds()-300)/60))*2
+			price = 25 + Money(math.Trunc((dur.Seconds()-300)/60))*2
 
 			if math.Remainder(dur.Seconds()-300, 60) != 0 {
 				price += 2
 			}
 
 		} else {
-			price = int(math.Trunc(dur.Seconds()/60)) * 5
+			price = Money(math.Trunc(dur.Seconds()/60)) * 5
 
 			if math.Remainder(dur.Seconds(), 60) != 0 {
 				price += 5
@@ -77,8 +79,8 @@ func SumCalls(callerCounter map[string][]PayDur) map[string]PayDur {
 
 	for c := range callerCounter {
 		// Initialize vars to sum values per caller
-		totalDur := 0.0
-		totalPay := 0
+		var totalDur float64
+		var totalPay Money
 		for k := range callerCounter[c] {
 			// Sum vales per caller
 			totalDur += callerCounter[c][k].TotalDuration
@@ -90,30 +92,47 @@ func SumCalls(callerCounter map[string][]PayDur) map[string]PayDur {
 }
 
 // TopCaller finds the top caller and its amount to pay
-func TopCaller(totalCalls map[string]PayDur) (string, int) {
+func TopCaller(totalCalls map[string]PayDur) string {
 	var topCaller string
-	topPay := 0
 	maxDur := 0.0
 	for k := range totalCalls {
 		if totalCalls[k].TotalDuration > maxDur {
+			maxDur = totalCalls[k].TotalDuration
 			topCaller = k
-			topPay = totalCalls[k].TotalPay
 		}
 	}
-	return topCaller, topPay
+	return topCaller
 }
 
-// PayFormat takes a map with total daily data per caller and returns the total amout to pay
-func PayFormat(price int64) string {
-	return ""
+// TotalDayPay takes a call colection, top caller and returns the correct amount to pay.
+func TotalDayPay(totalCalls map[string]PayDur, topCaller string) Money {
+	var p Money
+	for k := range totalCalls {
+		if k == topCaller {
+			continue
+		}
+		p += totalCalls[k].TotalPay
+	}
+	return p
+}
+
+func (money Money) String() string {
+	a := money / 100
+	b := money % 100
+
+	if b < 0 {
+		b *= -1
+	}
+
+	return fmt.Sprintf("%d.%02d", a, b)
 }
 
 func main() {
 	// Create maps to facilitate calcs
 	callerCounter := FileParser(os.Args[1])
 	totalCalls := SumCalls(callerCounter)
-	topCaller, topPay := TopCaller(totalCalls)
-
-	fmt.Println(topCaller, topPay)
+	topCaller := TopCaller(totalCalls)
+	totalDayPay := TotalDayPay(totalCalls, topCaller)
+	fmt.Println(totalDayPay)
 
 }
