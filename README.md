@@ -51,3 +51,13 @@ Example:
 ```
 ./CallCulator data/testdata.csv
 ```
+
+### Output
+
+The output will be the total in decimal format, with no currency specified
+
+Exemple:
+
+```
+0.51
+```
