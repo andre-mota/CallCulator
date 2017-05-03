@@ -31,7 +31,8 @@ func FileParser(filepath string) map[string][]PayDur {
 	callerCounter := make(map[string][]PayDur)
 
 	// Load the file
-	f, _ := os.Open(filepath)
+	f, err := os.Open(filepath)
+	handleErr(err)
 
 	// Create a new reader.
 	r := csv.NewReader(bufio.NewReader(f))
