@@ -1,22 +1,11 @@
 package main
 
-import (
-	"errors"
-	"testing"
-)
+import "testing"
 
 const (
 	testdata1 = "data/testdata.csv"
 	testdata2 = "data/testdata2.csv"
 )
-
-func TestHandleErr(t *testing.T) {
-	err := errors.New("Error!!!")
-	e := handleErr(err)
-	if e != "Error!!!" {
-		t.Fatalf("Error on handleErr(err), should be %s, got %s", "Error!!!", err)
-	}
-}
 
 func TestString(t *testing.T) {
 	var m Money = 1575
