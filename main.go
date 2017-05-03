@@ -10,12 +10,13 @@ import (
 	"time"
 )
 
-// PayDur is a struct to use when handling call duration and its price
+// PayDur is a struct to use when handling call duration and its cost
 type PayDur struct {
 	TotalDuration float64
 	TotalPay      Money
 }
 
+// handleErr makes it easier to handler errors
 func handleErr(err error) {
 	if err != nil {
 		fmt.Println(err)
@@ -27,11 +28,29 @@ func handleErr(err error) {
 type Money int
 
 // AddRemainder adds the correct amount to pay for the last minute of the call
-func AddRemainder(r float64, total Money, p Money) Money {
+func AddRemainder(r float64, total *Money, p Money) {
 	if math.Remainder(r, 60) != 0 {
-		total += p
+		*total += p
 	}
-	return total
+}
+
+//CalcCost Calculates the cost for the call
+func CalcCost(dur float64) Money {
+	var cost Money
+	var c Money
+	if dur >= 300 {
+		dur -= 300
+		cost = 25 + Money(math.Trunc(dur/60))*2
+
+		c = 2
+
+	} else {
+		cost = Money(math.Trunc(dur/60)) * 5
+
+		c = 5
+	}
+	AddRemainder(dur, &cost, c)
+	return cost
 }
 
 // FileParser takes the data file and parses its data to a map
@@ -60,20 +79,10 @@ func FileParser(filepath string) map[string][]PayDur {
 		handleErr(err)
 
 		dur := tsEnd.Sub(tsStart)
-		var price Money
 
-		if dur.Seconds() >= 300 {
-			price = 25 + Money(math.Trunc((dur.Seconds()-300)/60))*2
+		cost := CalcCost(dur.Seconds())
 
-			price = AddRemainder((dur.Seconds() - 300), price, 2)
-
-		} else {
-			price = Money(math.Trunc(dur.Seconds()/60)) * 5
-
-			price = AddRemainder(dur.Seconds(), price, 5)
-		}
-
-		callerCounter[r[2]] = append(callerCounter[r[2]], PayDur{TotalDuration: dur.Seconds(), TotalPay: price})
+		callerCounter[r[2]] = append(callerCounter[r[2]], PayDur{TotalDuration: dur.Seconds(), TotalPay: cost})
 	}
 	return callerCounter
 }
