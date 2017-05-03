@@ -26,6 +26,14 @@ func handleErr(err error) {
 // Money is a type to handle money format
 type Money int
 
+// AddRemainder adds the correct amount to pay for the last minute of the call
+func AddRemainder(r float64, total Money, p Money) Money {
+	if math.Remainder(r, 60) != 0 {
+		total += p
+	}
+	return total
+}
+
 // FileParser takes the data file and parses its data to a map
 func FileParser(filepath string) map[string][]PayDur {
 	callerCounter := make(map[string][]PayDur)
@@ -57,16 +65,12 @@ func FileParser(filepath string) map[string][]PayDur {
 		if dur.Seconds() >= 300 {
 			price = 25 + Money(math.Trunc((dur.Seconds()-300)/60))*2
 
-			if math.Remainder(dur.Seconds()-300, 60) != 0 {
-				price += 2
-			}
+			price = AddRemainder((dur.Seconds() - 300), price, 2)
 
 		} else {
 			price = Money(math.Trunc(dur.Seconds()/60)) * 5
 
-			if math.Remainder(dur.Seconds(), 60) != 0 {
-				price += 5
-			}
+			price = AddRemainder(dur.Seconds(), price, 5)
 		}
 
 		callerCounter[r[2]] = append(callerCounter[r[2]], PayDur{TotalDuration: dur.Seconds(), TotalPay: price})
@@ -138,5 +142,4 @@ func exec(filepath string) Money {
 }
 func main() {
 	fmt.Println(exec(os.Args[1]))
-
 }
