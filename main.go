@@ -127,12 +127,15 @@ func (money Money) String() string {
 	return fmt.Sprintf("%d.%02d", a, b)
 }
 
-func main() {
+func exec(filepath string) Money {
 	// Create maps to facilitate calcs
-	callerCounter := FileParser(os.Args[1])
+	callerCounter := FileParser(filepath)
 	totalCalls := SumCalls(callerCounter)
 	topCaller := TopCaller(totalCalls)
 	totalDayPay := TotalDayPay(totalCalls, topCaller)
-	fmt.Println(totalDayPay)
+	return totalDayPay
+}
+func main() {
+	fmt.Println(exec(os.Args[1]))
 
 }
