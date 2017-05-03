@@ -19,7 +19,6 @@ type PayDur struct {
 // handleErr makes it easier to handler errors
 func handleErr(err error) {
 	if err != nil {
-		fmt.Println(err)
 		panic(err)
 	}
 }
